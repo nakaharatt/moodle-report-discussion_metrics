@@ -150,7 +150,7 @@ if($type||$tsort||$treset||$page){
     echo '<br>';
     //echo '<a href="download.php'.$paramstr.'"><button class="btn btn-primary ">'.get_string('download').'</button></a><br><br>';
     
-    if($type < 3){
+    if($type < 4){
         if($forumid){
             $students = get_users_by_capability($modcontext, 'mod/forum:viewdiscussion','',$orderbyname);
             $discussions = $DB->get_records('forum_discussions',array('forum'=>$forum->id));
@@ -236,13 +236,13 @@ if($type||$tsort||$treset||$page){
         }
     }elseif($type == 3){ //Dialogue(discussion)の集計
         //$allpostssql = 'SELECT * FROM {forum_posts} WHERE discussion IN '.$discussionarray;
-        $discussiondata = new report_discussion_metrics\select\get_discussion_data($courseid,$forumid,$groupfilter,$starttime,$endtime);
+        $discussiondata = new report_discussion_metrics\select\get_discussion_data($students,$courseid,$forumid,$groupfilter,$starttime,$endtime);
         $data = $discussiondata->data;
         //Render Table
         $table = new flexible_table('forum_report_table');
         $table->define_baseurl($PAGE->url);
-        $table->define_columns(array('forumname','name','posts','bereplied','threads','maxdepth','l1','l2','l3','l4','multimedia','replytime'));
-        $table->define_headers(array("Forum",'Discussion','#posts','#been replied to','#threads','Max depth','#L1','#L2','#L3','#L4','#multimedia','Reply time'));
+        $table->define_columns(array('forumname','name','posts','bereplied','threads','maxdepth','l1','l2','l3','l4','multimedia','replytime','density'));
+        $table->define_headers(array("Forum",'Discussion','#posts','#been replied to','#threads','Max depth','#L1','#L2','#L3','#L4','#multimedia','Reply time','Density'));
         $table->sortable(true);
         $table->collapsible(true);
         $table->set_attribute('class', 'admintable generaltable');
@@ -256,7 +256,7 @@ if($type||$tsort||$treset||$page){
             $data = array_slice($data,$page*$pagesize,$pagesize);
         }
         foreach($data as $row){
-            $trdata = array($row->forumname,$row->name,$row->posts,$row->bereplied,$row->threads,$row->maxdepth,$row->l1,$row->l2,$row->l3,$row->l4,$row->multimedia,$row->replytime);
+            $trdata = array($row->forumname,$row->name,$row->posts,$row->bereplied,$row->threads,$row->maxdepth,$row->l1,$row->l2,$row->l3,$row->l4,$row->multimedia,$row->replytime,$row->density);
             $table->add_data($trdata);
         }
     }elseif($type == 4){ //DialogueをGroupごと
@@ -266,8 +266,8 @@ if($type||$tsort||$treset||$page){
         //Render Table
         $table = new flexible_table('forum_report_table');
         $table->define_baseurl($PAGE->url);
-        $table->define_columns(array('groupname','forumname','name','posts','bereplied','threads','l1','l2','l3','l4','multimedia','replytime'));
-        $table->define_headers(array('Group',"Forum",'Discussion','#post','#been replied to','#replies to seed','#L1','#L2','#L3','#L4','#multimedia','Reply time'));
+        $table->define_columns(array('groupname','forumname','name','posts','bereplied','threads','l1','l2','l3','l4','multimedia','replytime','density'));
+        $table->define_headers(array('Group',"Forum",'Discussion','#post','#been replied to','#replies to seed','#L1','#L2','#L3','#L4','#multimedia','Reply time','Density'));
         $table->sortable(true);
         $table->collapsible(true);
         $table->set_attribute('class', 'admintable generaltable');
@@ -284,7 +284,7 @@ if($type||$tsort||$treset||$page){
             $data = array_slice($data,$page*$pagesize,$pagesize);
         }
         foreach($data as $row){
-            $trdata = array($row->groupname,$row->forumname,$row->name,$row->posts,$row->bereplied,$row->threads,$row->l1,$row->l2,$row->l3,$row->l4,$row->multimedia,$row->replytime);
+            $trdata = array($row->groupname,$row->forumname,$row->name,$row->posts,$row->bereplied,$row->threads,$row->l1,$row->l2,$row->l3,$row->l4,$row->multimedia,$row->replytime,$row->density);
             $table->add_data($trdata);
         }
     }

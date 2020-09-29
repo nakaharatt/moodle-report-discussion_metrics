@@ -37,30 +37,35 @@ class get_discussion_data {
     
     public $data = array();
     
-    public function __construct($courseid,$forumid=NULL,$groupfilter=NULL,$starttime=0,$endtime=0){
+    public function __construct($students,$courseid,$forumid=NULL,$groupfilter=NULL,$starttime=0,$endtime=0){
         global $DB;
         //echo "<pre>";
-        $allgroups = groups_get_all_groups($courseid);
         if($groupfilter){
+            $allgroups = groups_get_all_groups($courseid);
             $allgroups = array($allgroups[$groupfilter]);
+            $wheregroupusers = '(';
+            foreach($allgroups as $group){
+                $groupusers = groups_get_members($group->id, 'u.id', 'u.id ASC');
+                //$groupusernum = count($groupusers);
+                foreach($groupusers as $guser){
+                    $student = $DB->get_record('user',array('id'=>$guser->id));
+                    @$countries[$student->country]++;
+                    $wheregroupusers .= $student->id.',';
+                }
+            }
+            $wheregroupusers .= '0)';
+        }else{
+            foreach($students as $student){
+                @$countries[$student->country]++;
+            }
         }
+        $countrynum = count($countries);
+        
         if($forumid){
             $forums = $DB->get_records('forum',array('id'=>$forumid));
         }else{
             $forums = $DB->get_records('forum',array('course'=>$courseid));
         } 
-        $wheregroupusers = '(';
-        foreach($allgroups as $group){
-            $groupusers = groups_get_members($group->id, 'u.id', 'u.id ASC');
-            $groupusernum = count($groupusers);
-            foreach($groupusers as $guser){
-                $student = $DB->get_record('user',array('id'=>$guser->id));
-                @$countries[$student->country]++;
-                $wheregroupusers .= $student->id.',';
-            }
-        }
-        $wheregroupusers .= '0)';
-        $countrynum = count($countries);
         foreach($forums as $forum){
             $discussions = $DB->get_records('forum_discussions',array('forum'=>$forum->id));
             foreach($discussions as $discussion){
@@ -85,7 +90,11 @@ class get_discussion_data {
                     $countryids = $DB->get_fieldset_select('user', 'DISTINCT country', $countrywhere,$partparam);
                     $discussiondata->multinationals += count($countryids);
                 }
-                $postssql = 'SELECT * FROM {forum_posts} WHERE userid IN '.$wheregroupusers.' AND discussion = '.$discussion->id. " AND id <> ".$discussion->firstpost;
+                if($groupfilter){
+                    $postssql = 'SELECT * FROM {forum_posts} WHERE userid IN '.$wheregroupusers.' AND discussion = '.$discussion->id. " AND id <> ".$discussion->firstpost;
+                }else{
+                    $postssql = 'SELECT * FROM {forum_posts} WHERE discussion = '.$discussion->id. " AND id <> ".$discussion->firstpost;
+                }
                 if($starttime){
                     $postssql = $postssql.' AND created>'.$starttime;
                 }
@@ -139,8 +148,8 @@ class get_discussion_data {
 
                 if($discussiondata->maxdepth) $discussiondata->avedepth = $depthsum/$threads;
                 $discussiondata->threads = $threads;
-                $discussiondata->threadsperstudent = $threads/$groupusernum;
-                $discussiondata->threadspercountry = $threads/$countrynum;
+                //$discussiondata->threadsperstudent = $threads/$groupusernum;
+                //$discussiondata->threadspercountry = $threads/$countrynum;
                 $discussiondata->levels = $levels;
                 $discussiondata->l1 = $levels[0];
                 $discussiondata->l2 = $levels[1];
@@ -162,7 +171,7 @@ class get_discussion_data {
                 }
 
                 //Density of discussion
-                //$discussiondata->density = discussion_metrics_format_time(($lastpost-$firstpost)/$discussiondata->posts);
+                $discussiondata->density = discussion_metrics_format_time(($lastpost-$firstpost)/$discussiondata->posts);
 
                 $this->data[$discussion->id] = $discussiondata;
             }
