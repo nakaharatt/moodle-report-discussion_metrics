@@ -171,8 +171,9 @@ class get_discussion_data {
                 }
 
                 //Density of discussion
-                $discussiondata->density = discussion_metrics_format_time(($lastpost-$firstpost)/$discussiondata->posts);
-
+                if($discussiondata->posts>0){
+                    $discussiondata->density = discussion_metrics_format_time(($lastpost-$firstpost)/$discussiondata->posts);
+                }
                 $this->data[$discussion->id] = $discussiondata;
             }
         }

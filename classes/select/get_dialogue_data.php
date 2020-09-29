@@ -160,9 +160,7 @@ class get_dialogue_data {
 
                     if($dialoguedata->posts){
                         //Density of discussion
-                        if($post>1){
-                            $dialoguedata->density = discussion_metrics_format_time(($lastpost-$firstpost)/$dialoguedata->posts);
-                        }
+                        $dialoguedata->density = discussion_metrics_format_time(($lastpost-$firstpost)/$dialoguedata->posts);
                         $this->data[] = $dialoguedata;
                     }
                 }
