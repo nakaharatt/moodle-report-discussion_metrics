@@ -9,7 +9,9 @@ class report_form extends moodleform {
 
         $mform->addElement('header','filter', get_string('reportfilter','report_discussion_metrics'));
         
-        $type = array('1' => 'Individual','2'=>'Groups','3'=>'Dialogue','4'=>'Dialogue/Group');
+        $strcountry = get_string('country');
+        $strgroup = get_string('group');
+        $type = array('1' => 'Individual','2'=>$strgroup,'3'=>'Dialogue','4'=>'Dialogue/'.$strgroup,'5'=>$strcountry,'6'=>$strcountry.'/'.$strgroup);
         $mform->addElement('select', 'type', "Type", $type);
         
         $forumdata = $DB->get_records('forum',array('course'=>$COURSE->id));
@@ -49,7 +51,7 @@ class report_form extends moodleform {
         $perpage = array('0' => 'All','10'=>'10','20'=>'20','30'=>'30','50'=>'50','100'=>'100');
         $mform->addElement('select', 'pagesize', "Reports per page", $perpage);
         
-        //Seedを含むか
+        //Seedを含むか TODO
         //$mform->addElement('checkbox','containseed','Contains seed post');
         
         $mform->closeHeaderBefore('changefilter');

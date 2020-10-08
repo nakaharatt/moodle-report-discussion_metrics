@@ -110,26 +110,11 @@ if(isset($page)){
 $mform->set_data($params);
 
 $PAGE->set_pagelayout('incourse');
-/// Output the page
-$PAGE->requires->jquery();
-$PAGE->requires->js('/report/discussion_metrics/scripts.js');
-$PAGE->requires->css('/report/discussion_metrics/styles.css');
 $PAGE->set_url($CFG->wwwroot.'/report/discussion_metrics/index.php',$params);
 $PAGE->navbar->add('discussion_metrics');
 $PAGE->set_heading($course->fullname);
 echo $OUTPUT->header();
 $mform->display();
-
-/*
-1. リプライ時間平均
-2. リプライしたスレッドのばらつき
-3. ポスト数
-4. リプライ数
-5. 文字数
-6. マルチメディア数
-7. 会話した国籍
-8. 会話した人数
-*/
 
 $strname = get_string('fullname');
 $strfirstname = get_string('firstname');
@@ -146,35 +131,35 @@ $strcl = get_string('completereport');
 $strinstituion = get_string('institution');
 $strgroup = get_string('group');
 $strmultimedia = get_string('multimedia','report_discussion_metrics');
+
 if($type||$tsort||$treset||$page){
     echo '<br>';
-    //echo '<a href="download.php'.$paramstr.'"><button class="btn btn-primary ">'.get_string('download').'</button></a><br><br>';
+    echo '<a href="download.php'.$paramstr.'"><button class="btn btn-primary ">'.get_string('download').'</button></a><br><br>';
     
-    if($type < 4){
-        if($forumid){
-            $students = get_users_by_capability($modcontext, 'mod/forum:viewdiscussion','',$orderbyname);
-            $discussions = $DB->get_records('forum_discussions',array('forum'=>$forum->id));
-        }else{
-            $students = get_users_by_capability($coursecontext, 'mod/forum:viewdiscussion','',$orderbyname);
-            $discussions = $DB->get_records('forum_discussions',array('course'=>$course->id));
-        }
-        $discussionarray = '(';
-        foreach($discussions as $discussion){
-            $discussionarray .= $discussion->id.',';
-        }
-        $discussionarray .= '0)';
+    
+    if($forumid){
+        $students = get_users_by_capability($modcontext, 'mod/forum:viewdiscussion','',$orderbyname);
+        $discussions = $DB->get_records('forum_discussions',array('forum'=>$forum->id));
+    }else{
+        //get_enrolled_users(context $context, $withcapability = '', $groupid = 0, $userfields = 'u.*', $orderby = '', $limitfrom = 0, $limitnum = 0)に変えること
+        //投稿が終わった後に学生からviewを剥奪することがある？考え中。
+        //$students = get_enrolled_users($coursecontext);
+        //var_dump($students);
+        $students = get_users_by_capability($coursecontext, 'mod/forum:viewdiscussion','',$orderbyname);
+        $discussions = $DB->get_records('forum_discussions',array('course'=>$course->id));
     }
+    
+    $discussionarray = '(';
+    foreach($discussions as $discussion){
+        $discussionarray .= $discussion->id.',';
+    }
+    $discussionarray .= '0)';
     if($type == 1){
         $studentdata = new report_discussion_metrics\select\get_student_data($students,$courseid,$forumid,$discussions,$discussionarray,$groupfilter,$countryfilter,$starttime,$endtime);
         $data = $studentdata->data;
-        //get_enrolled_users(context $context, $withcapability = '', $groupid = 0, $userfields = 'u.*', $orderby = '', $limitfrom = 0, $limitnum = 0)に変えること
-        //$students = get_enrolled_users($coursecontext);
-        //var_dump($students);
         
         
         $table = new flexible_table('forum_report_table');
-        //$table->head = array($strname,$strcounrty,$strposts,$strreplies,$strwordcount,$strviews,$strfp,$strlp,$strsr,$strcl);
-        //$table->define_align = array ("center","center","center","center","center","center","center","center","center","center");
         $table->define_baseurl($PAGE->url);
         $table->define_columns(array('fullname','group', 'country', 'institution','discussion','posts', 'replies','repliestoseed','Reply time','l1','l2','l3','l4','maxdepth','avedepth','wordcount', 'views','multimedia','imagenum','videonum','audionum','linknum','participants','multinational'));
         $table->define_headers(array($strname,$strgroup,$strcounrty,$strinstituion,'Discussion',$strposts,$strreplies,'Replies to seed','Reply Time(s)','#L1','#L2','#L3','#L4','Max depth','Average depth',$strwordcount,$strviews,$strmultimedia,'#image','#video','#audio','#link','Participants','Multinational'));
@@ -202,7 +187,6 @@ if($type||$tsort||$treset||$page){
             $data = array_slice($data,$page*$pagesize,$pagesize);
         }
         foreach($data as $row){
-            //$table->data[] = array($row->name,$row->country,$row->posts,$row->replies,$row->wordcount,$row->views,$row->firstpost,$row->lastpost,$sendreminder,$complink);
             $trdata = array($row->fullname,$row->group,$row->country,$row->institution,$row->discussion,$row->posts,$row->replies,$row->repliestoseed,$row->replytime,$row->l1,$row->l2,$row->l3,$row->l4,$row->maxdepth,$row->avedepth,$row->wordcount,$row->views,$row->multimedia,$row->imagenum,$row->videonum,$row->audionum,$row->linknum,$row->participants,$row->multinationals);
             $table->add_data($trdata);
         }
@@ -212,8 +196,6 @@ if($type||$tsort||$treset||$page){
         $data = $groupdata->data;
         
         $table = new flexible_table('forum_report_table');
-        //$table->head = array($strname,$strcounrty,$strposts,$strreplies,$strwordcount,$strviews,$strfp,$strlp,$strsr,$strcl);
-        //$table->define_align = array ("center","center","center","center","center","center","center","center","center","center");
         $table->define_baseurl($PAGE->url);
         $table->define_columns(array('name','users','multinationals','repliestoseed', 'replies','repliedusers','notrepliedusers','wordcount', 'views','multimedia'));
         $table->define_headers(array($strgroup,'#member',$strcounrty,'#threads','#replies','#replied user','#not replied user',$strwordcount,$strviews,$strmultimedia));
@@ -230,15 +212,12 @@ if($type||$tsort||$treset||$page){
             $data = array_slice($data,$page*$pagesize,$pagesize);
         }
         foreach($data as $row){
-            //$table->data[] = array($row->name,$row->country,$row->posts,$row->replies,$row->wordcount,$row->views,$row->firstpost,$row->lastpost,$sendreminder,$complink);
             $trdata = array($row->name,$row->users,$row->multinationals,$row->repliestoseed,$row->replies,$row->repliedusers,$row->notrepliedusers,$row->wordcount,$row->views,$row->multimedia);
             $table->add_data($trdata);
         }
     }elseif($type == 3){ //Dialogue(discussion)の集計
-        //$allpostssql = 'SELECT * FROM {forum_posts} WHERE discussion IN '.$discussionarray;
         $discussiondata = new report_discussion_metrics\select\get_discussion_data($students,$courseid,$forumid,$groupfilter,$starttime,$endtime);
         $data = $discussiondata->data;
-        //Render Table
         $table = new flexible_table('forum_report_table');
         $table->define_baseurl($PAGE->url);
         $table->define_columns(array('forumname','name','posts','bereplied','threads','maxdepth','l1','l2','l3','l4','multimedia','replytime','density'));
@@ -260,10 +239,8 @@ if($type||$tsort||$treset||$page){
             $table->add_data($trdata);
         }
     }elseif($type == 4){ //DialogueをGroupごと
-        //$allpostssql = 'SELECT * FROM {forum_posts} WHERE discussion IN '.$discussionarray;
         $dialoguedata = new report_discussion_metrics\select\get_dialogue_data($courseid,$forumid,$groupfilter,$starttime,$endtime);
         $data = $dialoguedata->data;
-        //Render Table
         $table = new flexible_table('forum_report_table');
         $table->define_baseurl($PAGE->url);
         $table->define_columns(array('groupname','forumname','name','posts','bereplied','threads','l1','l2','l3','l4','multimedia','replytime','density'));
@@ -287,12 +264,60 @@ if($type||$tsort||$treset||$page){
             $trdata = array($row->groupname,$row->forumname,$row->name,$row->posts,$row->bereplied,$row->threads,$row->l1,$row->l2,$row->l3,$row->l4,$row->multimedia,$row->replytime,$row->density);
             $table->add_data($trdata);
         }
+    }elseif($type == 5){ //Countryごと
+        $countrydata = new report_discussion_metrics\select\get_country_data($students,$courseid,$forumid,$discussions,$discussionarray,$groupfilter,$countryfilter,$starttime,$endtime);
+        $data = $countrydata->data;
+        $table = new flexible_table('forum_report_table');
+        $table->define_baseurl($PAGE->url);
+        $table->define_columns(array('country','users','repliestoseed', 'replies','repliedusers','notrepliedusers','wordcount', 'views','multimedia'));
+        $table->define_headers(array($strcounrty,'#member','#replies to seed','#replies','#replied user','#not replied user',$strwordcount,$strviews,$strmultimedia));
+        $table->sortable(true);
+        $table->collapsible(true);
+        $table->set_attribute('class', 'admintable generaltable');
+        $table->setup();
+        $sortby = $table->get_sort_columns();
+        if($sortby && !$orderbyname){
+            usort($data,forum_report_sort($sortby));
+        }
+        if($pagesize){
+            $table->pagesize($pagesize, count($data));
+            $data = array_slice($data,$page*$pagesize,$pagesize);
+        }
+        foreach($data as $row){
+            $trdata = array($row->country,$row->users,$row->repliestoseed,$row->replies,$row->repliedusers,$row->notrepliedusers,$row->wordcount,$row->views,$row->multimedia);
+            $table->add_data($trdata);
+        }
+    }elseif($type == 6){ //DialogueをGroupごと
+        $groupcountrydata = new report_discussion_metrics\select\get_group_country_data($students,$courseid,$forumid,$discussions,$discussionarray,$groupfilter,$countryfilter,$starttime,$endtime);
+        $data = $groupcountrydata->data;
+        $table = new flexible_table('forum_report_table');
+        $table->define_baseurl($PAGE->url);
+        $table->define_columns(array('groupname','country','users','repliestoseed', 'replies','repliedusers','notrepliedusers','wordcount', 'views','multimedia'));
+        $table->define_headers(array($strgroup,$strcounrty,'#member','#replies to seed','#replies','#replied user','#not replied user',$strwordcount,$strviews,$strmultimedia));
+        $table->sortable(true);
+        $table->collapsible(true);
+        $table->set_attribute('class', 'admintable generaltable');
+        $table->setup();
+        $sortby = $table->get_sort_columns();
+        if($sortby && !$orderbyname){
+            usort($data,forum_report_sort($sortby));
+        }
+        if($pagesize){
+            $table->pagesize($pagesize, count($data));
+            $data = array_slice($data,$page*$pagesize,$pagesize);
+        }
+        foreach($data as $group){
+            foreach($group as $row){
+                $trdata = array($row->groupname,$row->country,$row->users,$row->repliestoseed,$row->replies,$row->repliedusers,$row->notrepliedusers,$row->wordcount,$row->views,$row->multimedia);
+                $table->add_data($trdata);
+            }
+        }
     }
    
-        echo '<input type="hidden" name="course" id="courseid" value="'.$courseid.'">';
-        if($forumid){
-            echo '<input type="hidden" name="forum" id="forumid" value="'.$forumid.'">';
-        }
-        $table->finish_output();
+    echo '<input type="hidden" name="course" id="courseid" value="'.$courseid.'">';
+    if($forumid){
+        echo '<input type="hidden" name="forum" id="forumid" value="'.$forumid.'">';
+    }
+    $table->finish_output();
 }
 echo $OUTPUT->footer();
