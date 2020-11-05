@@ -47,3 +47,6 @@ $string['reportfilter'] = 'Report filter';
 $string['remindsubject'] = 'Reminder to participate in the international exchange';
 $string['remindmessage'] = 'We\'ve noticed you haven\'t been participating in the international online exchange. Please log in and reply to others using the forums. Good luck!';
 $string['sentreminder'] = 'Sent a reminder.';
+
+//log
+$string['eventreportviewed'] = 'Discussion Metrics viewed';
