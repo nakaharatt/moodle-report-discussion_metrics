@@ -29,6 +29,8 @@ $coursecontext = context_course::instance($course->id);
 
 require_capability('report/discussion_metrics:view', $coursecontext, NULL, true, 'noviewdiscussionspermission', 'forum');
 
+$event = \report_discussion_metrics\event\report_viewed::create(array('context' => $coursecontext));
+$event->trigger();
 
 if($forumid){
     $params['forum'] = $forumid;
