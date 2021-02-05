@@ -14,7 +14,7 @@
 
 2020 Takahiro Nakahara <nakahara@3strings.co.jp>
 
-Created for IVE projects(https://iveproject.org).
+Created for the IVEProject (https://iveproject.org).
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
