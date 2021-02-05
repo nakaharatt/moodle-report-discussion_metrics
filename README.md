@@ -1,12 +1,20 @@
-# Forum Metrics #
+# Discussion Metrics #
 
-TODO Describe the plugin shortly here.
+* This feature has been merged into Moodle. It played a major role, but we still have a little development.
 
-TODO Provide more detailed description here.
+## 1. Install
+
+1) Get the code using git by running the following command in the top level folder of your Moodle install:
+
+`git clone git://github.com/nakaharatt/moodle-block_forum_report.git report/discussion_metrics`
+
+2) Login to Moodle as the admin user and click on Notifications in the Site Administration panel.
 
 ## License ##
 
 2020 Takahiro Nakahara <nakahara@3strings.co.jp>
+
+Created for IVE projects(https://iveproject.org).
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
@@ -19,3 +27,4 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
 this program.  If not, see <http://www.gnu.org/licenses/>.
+
