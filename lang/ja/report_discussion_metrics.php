@@ -27,3 +27,4 @@ defined('MOODLE_INTERNAL') || die();
 
 $string['discussion_metrics:view'] = 'view';
 $string['pluginname'] = '対話マトリクス';
+$string['eventreportviewed'] = '対話マトリクスレポートが表示されました。';

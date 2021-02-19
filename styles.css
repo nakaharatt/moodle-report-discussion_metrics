@@ -1,0 +1,21 @@
+#discssionmetrixreport div.no-overflow{
+    height:100vh;
+}
+#discussionmetrixreporttable thead th{
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: white;
+}
+/*
+#discussionmetrixreporttable td:first-child {
+  position: -webkit-sticky;
+  position: sticky;
+  left: 0;
+}
+
+#discussionmetrixreporttable thead th:first-child {
+  z-index: 2;
+}
+*/

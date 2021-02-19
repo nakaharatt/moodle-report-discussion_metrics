@@ -67,7 +67,11 @@ class get_discussion_data {
             $forums = $DB->get_records('forum',array('course'=>$courseid));
         } 
         foreach($forums as $forum){
-            $discussions = $DB->get_records('forum_discussions',array('forum'=>$forum->id));
+            if($groupfilter){
+                $discussions = $DB->get_records('forum_discussions',array('forum'=>$forum->id,'groupid'=>$groupfilter));
+            }else{
+                $discussions = $DB->get_records('forum_discussions',array('forum'=>$forum->id));
+            }
             foreach($discussions as $discussion){
                 $threads = 0;
                 $firstpostdata = $DB->get_record('forum_posts',array('id'=>$discussion->firstpost));
@@ -80,7 +84,7 @@ class get_discussion_data {
                 $levels = array(0,0,0,0);
                 $discussiondata = new discussiondata();
                 $discussiondata->forumname = $forum->name;
-                $discussiondata->name = $discussion->name;
+                $discussiondata->name = $discussion->name." (id=".$discussion->id.")";
                 $discswhere = "discussion=?";
                 $dparam = ['discussionid'=>$discussion->id];
                 if($participants = $DB->get_fieldset_select('forum_posts', 'DISTINCT userid', $discswhere,$dparam)){
@@ -146,7 +150,7 @@ class get_discussion_data {
                     $replytimearr[] = $post->created;
                 }
 
-                if($discussiondata->maxdepth) $discussiondata->avedepth = $depthsum/$threads;
+                //if($discussiondata->maxdepth) $discussiondata->avedepth = $depthsum/$threads;
                 $discussiondata->threads = $threads;
                 //$discussiondata->threadsperstudent = $threads/$groupusernum;
                 //$discussiondata->threadspercountry = $threads/$countrynum;

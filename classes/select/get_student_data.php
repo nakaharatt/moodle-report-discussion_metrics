@@ -102,6 +102,7 @@ class get_student_data {
             $studentdata->participants = 0;
             $studentdata->multinationals = 0;
             $replytimearr = array();
+            $foravedepth = array();
             $allpostssql = 'SELECT * FROM {forum_posts} WHERE userid='.$student->id.' AND discussion IN '.$discussionarray;
             if($starttime){
                 $allpostssql = $allpostssql.' AND created>'.$starttime;
@@ -138,6 +139,7 @@ class get_student_data {
                                         $depths[$post->id]++;
                                     }
                                     $parent = $parentpost->parent;
+                                    $foravedepth[$post->id] = $depths[$post->id];
                                 }else{
                                     //The parent data has deleted
                                     $depths[$post->id] = 0;
@@ -165,8 +167,7 @@ class get_student_data {
                         $linknum += $multimediaobj->link;
                     }
                 }
-                $depths = array_filter($depths);
-                if($depths) $studentdata->avedepth = round(array_sum($depths)/count($depths),3);
+                if($foravedepth) $studentdata->avedepth = round(array_sum($foravedepth)/count($foravedepth),3);
                 $studentdata->discussion = count($posteddiscussions);
                 $studentdata->multimedia = $multimedianum;
                 /*
