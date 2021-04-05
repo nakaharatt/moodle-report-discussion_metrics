@@ -11,7 +11,7 @@ class report_form extends moodleform {
         
         $strcountry = get_string('country');
         $strgroup = get_string('group');
-        $type = array('1' => 'Individual','2'=>$strgroup,'3'=>'Dialogue','4'=>'Dialogue/'.$strgroup,'5'=>$strcountry,'6'=>$strcountry.'/'.$strgroup);
+        $type = array('1' => 'Individual','2'=>$strgroup,'3'=>'Discussion','4'=>'Discussion/'.$strgroup,'5'=>$strcountry,'6'=>$strcountry.'/'.$strgroup);
         $mform->addElement('select', 'type', "Type", $type);
         
         $forumdata = $DB->get_records('forum',array('course'=>$COURSE->id));
@@ -30,6 +30,11 @@ class report_form extends moodleform {
             }
             $mform->addElement('select', 'group', get_string('group'), $groupoptions);
         }
+      
+        //Add @20210405
+        $mform->addElement('checkbox','onlygroupworks',get_string('onlygroupworks','report_discussion_metrics'));
+        $mform->setType('onlygroupworks',PARAM_INT);
+        $mform->setDefault('onlygroupworks',1);
         
         $mform->addElement('hidden', 'id', $COURSE->id);
         $mform->setType('id',PARAM_INT);

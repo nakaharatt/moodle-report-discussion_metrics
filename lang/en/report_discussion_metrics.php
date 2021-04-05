@@ -42,6 +42,7 @@ $string['multimedia'] = 'Multimedia';
 $string['reportstart'] = 'Start';
 $string['reportend'] = 'End';
 $string['reportfilter'] = 'Report filter';
+$string['onlygroupworks'] = 'Only as a chosen group';
 
 //Reminder mail
 $string['remindsubject'] = 'Reminder to participate in the international exchange';
