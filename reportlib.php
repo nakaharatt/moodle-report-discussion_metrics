@@ -34,7 +34,7 @@ class report_form extends moodleform {
         //Add @20210405
         $mform->addElement('checkbox','onlygroupworks',get_string('onlygroupworks','report_discussion_metrics'));
         $mform->setType('onlygroupworks',PARAM_INT);
-        $mform->setDefault('onlygroupworks',1);
+        $mform->setDefault('onlygroupworks',0);
         
         $mform->addElement('hidden', 'id', $COURSE->id);
         $mform->setType('id',PARAM_INT);
