@@ -37,15 +37,11 @@ class get_group_country_data {
     
     public $data = array();
     
-    public function __construct($students,$courseid,$forumid=NULL,$discussions,$discussionarray,$groupfilter=NULL,$countryfilter=NULL,$starttime=0,$endtime=0){
+    public function __construct($students,$courseid,$forumid=NULL,$discussions,$discussionarray,$firstposts,$allgroups=NULL,$countryfilter=NULL,$starttime=0,$endtime=0){
         global $DB;
         $countries = get_string_manager()->get_list_of_countries();
-        foreach($discussions as $discussion){
-            $firstposts[] = $discussion->firstpost;
-        }
-        $allgroups = groups_get_all_groups($courseid);
-        if($groupfilter){
-            $allgroups = array($allgroups[$groupfilter]);
+        if(!$allgroups){
+            $allgroups = groups_get_all_groups($courseid);
         }
         foreach($allgroups as $group){
             $countryusers = array();

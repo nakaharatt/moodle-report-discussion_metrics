@@ -37,14 +37,16 @@ class get_student_data {
 
     public $data = array();
     
-    public function __construct($students,$courseid,$forumid=NULL,$discussions,$discussionarray,$groupfilter=NULL,$countryfilter=NULL,$starttime=0,$endtime=0){
+    public function __construct($students,$courseid,$forumid=NULL,$discussions,$discussionarray,$firstposts,$starttime=0,$endtime=0){
         global $DB;
         
         $countries = get_string_manager()->get_list_of_countries();
         
+        /*
         foreach($discussions as $discussion){
             $firstposts[] = $discussion->firstpost;
         }
+        */
         
         foreach($students as $student){
             $studentdata = new studentdata();
@@ -57,6 +59,7 @@ class get_student_data {
                 $tempgroups[] = $studentgroup->name;
             }
             if($tempgroups) $studentdata->group = implode(',',$tempgroups);
+            /*
             $ingroups = array_keys($studentgroups);
             if($groupfilter){
                 //echo $groupfilter;
@@ -64,7 +67,8 @@ class get_student_data {
                     continue;
                 }
             }
-
+            */
+            
             $studentdata->id = $student->id;
 
             //Name

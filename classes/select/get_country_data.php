@@ -37,25 +37,14 @@ class get_country_data {
     
     public $data = array();
     
-    public function __construct($students,$courseid,$forumid=NULL,$discussions,$discussionarray,$groupfilter=NULL,$countryfilter=NULL,$starttime=0,$endtime=0){
+    public function __construct($students,$courseid,$forumid=NULL,$discussions,$discussionarray,$firstposts,$starttime=0,$endtime=0){
         global $DB;
         $countries = get_string_manager()->get_list_of_countries();
-        foreach($discussions as $discussion){
-            $firstposts[] = $discussion->firstpost;
-        }
         $countryusers = array();
-        if($groupfilter){
-            $groupusers = groups_get_members($groupfilter, 'u.id', 'u.id ASC');
-            foreach($groupusers as $guser){
-                $guserdata = $DB->get_record('user',array('id'=>$guser->id));
-                $countryusers[$guserdata->country][$guserdata->id] = $guserdata;
-            }
-        }else{
-            foreach($students as $student){
-                $countryusers[$student->country][$student->id] = $student;
-            }
+        foreach($students as $student){
+            $countryusers[$student->country][$student->id] = $student;
         }
-        foreach($countryusers as $key=>$students){
+        foreach($countryusers as $key=>$countrystudents){
             $countrydata = new countrydata;
             if($key){
                 $countrydata->country = $countries[$key];
@@ -76,7 +65,7 @@ class get_country_data {
             $countrydata->repliedusers = 0;
             $sumtime = 0;
             
-            foreach($students as $student){
+            foreach($countrystudents as $countrystudent){
                 $studentdata = (object)"";
                 $studentdata->id = $student->id;
 

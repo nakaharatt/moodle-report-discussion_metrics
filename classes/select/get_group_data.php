@@ -37,19 +37,14 @@ class get_group_data {
     
     public $data = array();
     
-    public function __construct($courseid,$forumid=NULL,$discussions,$discussionarray,$groupfilter=NULL,$countryfilter=NULL,$starttime=0,$endtime=0){
+    public function __construct($courseid,$forumid=NULL,$discussions,$discussionarray,$firstposts,$allgroups,$starttime=0,$endtime=0){
         global $DB;
-        
-        foreach($discussions as $discussion){
-            $firstposts[] = $discussion->firstpost;
+
+        if(!$allgroups){
+            $allgroups = groups_get_all_groups($courseid);
         }
-        $allgroups = groups_get_all_groups($courseid);
-        if($groupfilter){
-            $allgroups = array($allgroups[$groupfilter]);
-        }
+
         foreach($allgroups as $group){
-            $groupusers = groups_get_members($group->id, 'u.id', 'u.id ASC');
-            $groupusernum = count($groupusers);
             $groupdata = new groupdata;
             $groupdata->name = $group->name;
             $groupdata->users = 0;
@@ -66,183 +61,176 @@ class get_group_data {
             $groupdata->repliedusers = 0;
             $sumtime = 0;
             $countries = array();
-            $gropuserlist = array_keys($groupusers);
-            foreach($groupusers as $guser){
-                $student = $DB->get_record('user',array('id'=>$guser->id));
-                $studentdata = (object)"";
+            if($groupusers = groups_get_members($group->id)){
+                $groupusernum = count($groupusers);
+                $gropuserlist = array_keys($groupusers);
+                foreach($groupusers as $guser){
+                    $student = $guser;
+                    $studentdata = (object)"";
+                    $studentdata->id = $student->id;
 
-                if($countryfilter && $countryfilter != $student->country){
-                    continue;
-                }
-
-                //Group
-                if($groupfilter && $groupfilter != $group->id){
-                    continue;
-                }
-            
-                $studentdata->id = $student->id;
-
-                //Discussion
-                $posteddiscussions = array();
-                $studentdata->posts = 0;
-                $studentdata->replies = 0;
-                $studentdata->repliestoseed = 0;
-                $studentdata->discussion = 0;
-                $studentdata->replytime = 0;
-                $studentdata->wordcount = 0;
-                $multimedianum = 0;
-                $studentdata->participants = 0;
-                $studentdata->multinationals = 0;
-                $allpostssql = 'SELECT * FROM {forum_posts} WHERE parent>0 AND userid='.$student->id.' AND discussion IN '.$discussionarray;
-                if($starttime){
-                    $allpostssql = $allpostssql.' AND created>'.$starttime;
-                }
-                if($endtime){
-                    $allpostssql = $allpostssql.' AND created<'.$endtime;
-                }
-                if($allposts = $DB->get_records_sql($allpostssql)){
-                    foreach($allposts as $post){
-                        @$posteddiscussions[$post->discussion] ++; //どのディスカッションに何回投稿したかを使う時が来るか？
-                        if($post->parent == 0){
-                            $groupdata->posts ++;
-                        }elseif($post->parent > 0){
-                            if(in_array($post->parent,$firstposts)){
-                                $groupdata->repliestoseed++;
+                    //Discussion
+                    $posteddiscussions = array();
+                    $studentdata->posts = 0;
+                    $studentdata->replies = 0;
+                    $studentdata->repliestoseed = 0;
+                    $studentdata->discussion = 0;
+                    $studentdata->replytime = 0;
+                    $studentdata->wordcount = 0;
+                    $multimedianum = 0;
+                    $studentdata->participants = 0;
+                    $studentdata->multinationals = 0;
+                    $allpostssql = 'SELECT * FROM {forum_posts} WHERE parent>0 AND userid='.$student->id.' AND discussion IN '.$discussionarray;
+                    if($starttime){
+                        $allpostssql = $allpostssql.' AND created>'.$starttime;
+                    }
+                    if($endtime){
+                        $allpostssql = $allpostssql.' AND created<'.$endtime;
+                    }
+                    if($allposts = $DB->get_records_sql($allpostssql)){
+                        foreach($allposts as $post){
+                            @$posteddiscussions[$post->discussion] ++; //どのディスカッションに何回投稿したかを使う時が来るか？
+                            if($post->parent == 0){
+                                $groupdata->posts ++;
+                            }elseif($post->parent > 0){
+                                if(in_array($post->parent,$firstposts)){
+                                    $groupdata->repliestoseed++;
+                                }
+                                if($parent = $DB->get_record('forum_posts',array('id'=>$post->parent))){
+                                    $sumtime = $sumtime + ($post->created - $parent->created);
+                                }
+                                $groupdata->replies ++;
                             }
-                            if($parent = $DB->get_record('forum_posts',array('id'=>$post->parent))){
-                                $sumtime = $sumtime + ($post->created - $parent->created);
-                            }
-                            $groupdata->replies ++;
-                        }
-                        /*
-                        //Depth
-                        if(!isset($depths[$post->id])){
-                            $parent = $post->parent;
-                            $depths[$post->id] = 1;
-                            while($parent!=0){
-                                if($parentpost = $DB->get_record('forum_posts',array('id'=>$parent))){
-                                    if(in_array($parentpost->userid ,$gropuserlist)){ // in_array
-                                        if(isset($depths[$parentpost->id])){
-                                            unset($depths[$parentpost->id]);
+                            /*
+                            //Depth
+                            if(!isset($depths[$post->id])){
+                                $parent = $post->parent;
+                                $depths[$post->id] = 1;
+                                while($parent!=0){
+                                    if($parentpost = $DB->get_record('forum_posts',array('id'=>$parent))){
+                                        if(in_array($parentpost->userid ,$gropuserlist)){ // in_array
+                                            if(isset($depths[$parentpost->id])){
+                                                unset($depths[$parentpost->id]);
+                                            }
+                                                $depths[$parentpost->id] = 0;
+                                            
+                                            $depths[$post->id]++;
                                         }
-                                            $depths[$parentpost->id] = 0;
-                                        
-                                        $depths[$post->id]++;
+                                        $parent = $parentpost->parent;
+                                    }else{
+                                        //The parent data has deleted
+                                        $depths[$post->id] = 0;
+                                        continue;
                                     }
-                                    $parent = $parentpost->parent;
-                                }else{
-                                    //The parent data has deleted
-                                    $depths[$post->id] = 0;
-                                    continue;
+                                }
+                                if($groupdata->maxdepth < $depths[$post->id]){
+                                    $groupdata->maxdepth = $depths[$post->id];
                                 }
                             }
-                            if($groupdata->maxdepth < $depths[$post->id]){
-                                $groupdata->maxdepth = $depths[$post->id];
+                            $depths = array_filter($depths);
+                            if($depths) $groupdata->avedepth = round(array_sum($depths)/count($depths),3);
+                            */
+                            $wordnum = count_words($post->message);
+                            $groupdata->wordcount += $wordnum;
+                            if($multimediaobj = get_mulutimedia_num($post->message)){
+                                $multimedianum += $multimediaobj->num;
                             }
                         }
-                        $depths = array_filter($depths);
-                        if($depths) $groupdata->avedepth = round(array_sum($depths)/count($depths),3);
-                        */
-                        $wordnum = count_words($post->message);
-                        $groupdata->wordcount += $wordnum;
-                        if($multimediaobj = get_mulutimedia_num($post->message)){
-                            $multimedianum += $multimediaobj->num;
+                        $groupdata->discussion += count($posteddiscussions);
+                        $groupdata->multimedia += $multimedianum;
+
+                        /*
+                        //対話した相手の人数と国籍
+                        list($discsin,$discsparam) = $DB->get_in_or_equal(array_keys($posteddiscussions));
+                        $discswhere = "userid <> ? AND discussion {$discsin}";
+                        $dparam = ['studentid'=>$student->id];
+                        $dparam += $discsparam;
+                        if($participants = $DB->get_fieldset_select('forum_posts', 'DISTINCT userid', $discswhere,$dparam)){
+                            $groupdata->participants += count($participants);
+                            list($partin,$partparam) = $DB->get_in_or_equal($participants);
+                            $countrywhere = "id {$partin}";
+                            $countryids = $DB->get_fieldset_select('user', 'DISTINCT country', $countrywhere,$partparam);
+                            $groupdata->countryids += $countryids;
                         }
+                        */
+                        //グループの国籍
+                        @$countries[$student->country]++;
+                        
+                        //Replyした
+                        $groupdata->repliedusers++;
+                    }else{
+                        $studentdata->discussion = 0;
+                        $groupdata->notrepliedusers++;
                     }
-                    $groupdata->discussion += count($posteddiscussions);
-                    $groupdata->multimedia += $multimedianum;
-
-                    /*
-                    //対話した相手の人数と国籍
-                    list($discsin,$discsparam) = $DB->get_in_or_equal(array_keys($posteddiscussions));
-                    $discswhere = "userid <> ? AND discussion {$discsin}";
-                    $dparam = ['studentid'=>$student->id];
-                    $dparam += $discsparam;
-                    if($participants = $DB->get_fieldset_select('forum_posts', 'DISTINCT userid', $discswhere,$dparam)){
-                        $groupdata->participants += count($participants);
-                        list($partin,$partparam) = $DB->get_in_or_equal($participants);
-                        $countrywhere = "id {$partin}";
-                        $countryids = $DB->get_fieldset_select('user', 'DISTINCT country', $countrywhere,$partparam);
-                        $groupdata->countryids += $countryids;
+                    //View
+                    $logtable = 'logstore_standard_log';
+                    $eventname = '\\\\mod_forum\\\\event\\\\discussion_viewed';
+                    if($forumid){
+                        $cm = get_coursemodule_from_instance('forum', $forumid, $courseid, false, MUST_EXIST);
+                        $viewsql = "SELECT * FROM {logstore_standard_log} WHERE userid=$student->id AND contextinstanceid=$cm->id AND contextlevel=".CONTEXT_MODULE." AND eventname='$eventname'";
+                    }else{
+                        $views = $DB->get_records($logtable,array('userid'=>$student->id,'courseid'=>$courseid,'eventname'=>$eventname));
+                        $viewsql = "SELECT * FROM {logstore_standard_log} WHERE userid=$student->id AND courseid=$courseid AND eventname='$eventname'";
                     }
-                    */
-                    //グループの国籍
-                    @$countries[$student->country]++;
-                    
-                    //Replyした
-                    $groupdata->repliedusers++;
-                }else{
-                    $studentdata->discussion = 0;
-                    $groupdata->notrepliedusers++;
-                }
-                //View
-                $logtable = 'logstore_standard_log';
-                $eventname = '\\\\mod_forum\\\\event\\\\discussion_viewed';
-                if($forumid){
-                    $cm = get_coursemodule_from_instance('forum', $forumid, $courseid, false, MUST_EXIST);
-                    $viewsql = "SELECT * FROM {logstore_standard_log} WHERE userid=$student->id AND contextinstanceid=$cm->id AND contextlevel=".CONTEXT_MODULE." AND eventname='$eventname'";
-                }else{
-                    $views = $DB->get_records($logtable,array('userid'=>$student->id,'courseid'=>$courseid,'eventname'=>$eventname));
-                    $viewsql = "SELECT * FROM {logstore_standard_log} WHERE userid=$student->id AND courseid=$courseid AND eventname='$eventname'";
-                }
-                if($starttime){
-                    $viewsql = $viewsql.' AND timecreated>'.$starttime;
-                }
-                if($endtime){
-                    $viewsql = $viewsql.' AND timecreated<'.$endtime;
-                }
-                $views = $DB->get_records_sql($viewsql);
-                $groupdata->views += count($views);
+                    if($starttime){
+                        $viewsql = $viewsql.' AND timecreated>'.$starttime;
+                    }
+                    if($endtime){
+                        $viewsql = $viewsql.' AND timecreated<'.$endtime;
+                    }
+                    $views = $DB->get_records_sql($viewsql);
+                    $groupdata->views += count($views);
 
-                //First post & Last post
-                $firstpostsql = 'SELECT MIN(created) FROM {forum_posts} WHERE userid='.$student->id.' AND discussion IN '.$discussionarray;
-                if($allposts){
-
+                    //First post & Last post
                     $firstpostsql = 'SELECT MIN(created) FROM {forum_posts} WHERE userid='.$student->id.' AND discussion IN '.$discussionarray;
-                    if($starttime){
-                        $firstpostsql = $firstpostsql.' AND created>'.$starttime;
-                    }
-                    if($endtime){
-                        $firstpostsql = $firstpostsql.' AND created<'.$endtime;
-                    }
-                    $firstpost = $DB->get_record_sql($firstpostsql);
-                    $minstr = 'min(created)'; //
-                    $firstpostdate = userdate($firstpost->$minstr);
-                    if(!@$groupdata->firstpost || $groupdata->firstpost > $firstpostdate){
-                        $groupdata->firstpost =  $firstpostdate;
-                    }
+                    if($allposts){
 
-                    $lastpostsql = 'SELECT MAX(created) FROM {forum_posts} WHERE userid='.$student->id.' AND discussion IN '.$discussionarray;
-                    if($starttime){
-                        $lastpostsql = $lastpostsql.' AND created>'.$starttime;
+                        $firstpostsql = 'SELECT MIN(created) FROM {forum_posts} WHERE userid='.$student->id.' AND discussion IN '.$discussionarray;
+                        if($starttime){
+                            $firstpostsql = $firstpostsql.' AND created>'.$starttime;
+                        }
+                        if($endtime){
+                            $firstpostsql = $firstpostsql.' AND created<'.$endtime;
+                        }
+                        $firstpost = $DB->get_record_sql($firstpostsql);
+                        $minstr = 'min(created)'; //
+                        $firstpostdate = userdate($firstpost->$minstr);
+                        if(!@$groupdata->firstpost || $groupdata->firstpost > $firstpostdate){
+                            $groupdata->firstpost =  $firstpostdate;
+                        }
+
+                        $lastpostsql = 'SELECT MAX(created) FROM {forum_posts} WHERE userid='.$student->id.' AND discussion IN '.$discussionarray;
+                        if($starttime){
+                            $lastpostsql = $lastpostsql.' AND created>'.$starttime;
+                        }
+                        if($endtime){
+                            $lastpostsql = $lastpostsql.' AND created<'.$endtime;
+                        }
+                        $lastpost = $DB->get_record_sql($lastpostsql);
+                        $maxstr = 'max(created)'; //
+                        $lastpostdate = userdate($lastpost->$maxstr);
+                        if(!@$groupdata->lastpost || $groupdata->lastpost < $lastpostdate){
+                            $groupdata->lastpost =  $lastpostdate;
+                        }
+                    }else{
+                        $studentdata->firstpost = '-';
+                        $studentdata->lastpost = '-';
                     }
-                    if($endtime){
-                        $lastpostsql = $lastpostsql.' AND created<'.$endtime;
-                    }
-                    $lastpost = $DB->get_record_sql($lastpostsql);
-                    $maxstr = 'max(created)'; //
-                    $lastpostdate = userdate($lastpost->$maxstr);
-                    if(!@$groupdata->lastpost || $groupdata->lastpost < $lastpostdate){
-                        $groupdata->lastpost =  $lastpostdate;
-                    }
-                }else{
-                    $studentdata->firstpost = '-';
-                    $studentdata->lastpost = '-';
+                    $groupdata->users++;
                 }
-                $groupdata->users++;
+                if($sumtime){
+                    $dif = ceil($sumtime/$groupdata->replies);
+                    $dif_time = gmdate("H:i:s", $dif);
+                    $dif_days = (strtotime(date("Y-m-d", $dif)) - strtotime("1970-01-01")) / 86400;
+                    $groupdata->replytime =  "{$dif_days}days<br>$dif_time";
+                }
+                //$groupdata->participants = round($groupdata->participants/$groupdata->users,3);
+                $groupdata->multinationals = round($groupdata->multinationals/$groupdata->users,3);
+                //$groupdata->discussion = round($groupdata->discussion/$groupdata->users,3);
+                $groupdata->posts = $groupdata->posts;//round($groupdata->posts/$groupdata->users,3);
+                $groupdata->replies = $groupdata->replies;//round($groupdata->replies/$groupdata->users,3);
+                $groupdata->multinationals = count($countries);
             }
-            if($sumtime){
-                $dif = ceil($sumtime/$groupdata->replies);
-                $dif_time = gmdate("H:i:s", $dif);
-                $dif_days = (strtotime(date("Y-m-d", $dif)) - strtotime("1970-01-01")) / 86400;
-                $groupdata->replytime =  "{$dif_days}days<br>$dif_time";
-            }
-            //$groupdata->participants = round($groupdata->participants/$groupdata->users,3);
-            $groupdata->multinationals = round($groupdata->multinationals/$groupdata->users,3);
-            //$groupdata->discussion = round($groupdata->discussion/$groupdata->users,3);
-            $groupdata->posts = $groupdata->posts;//round($groupdata->posts/$groupdata->users,3);
-            $groupdata->replies = $groupdata->replies;//round($groupdata->replies/$groupdata->users,3);
-            $groupdata->multinationals = count($countries);
             $this->data[$group->id] = $groupdata;
         }
     }

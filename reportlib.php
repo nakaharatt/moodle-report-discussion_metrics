@@ -30,7 +30,17 @@ class report_form extends moodleform {
             }
             $mform->addElement('select', 'group', get_string('group'), $groupoptions);
         }
-      
+
+        //Add @20210510
+        $groupings = groups_get_all_groupings($COURSE->id);
+        if(count($groupings)){
+            $groupingoptions = array('0'=>get_string('all'));
+            foreach($groupings as $grouping){
+                $groupingoptions[$grouping->id] = $grouping->name;
+            }
+            $mform->addElement('select', 'grouping', get_string('groupings','group'), $groupingoptions);
+        }
+
         //Add @20210405
         $mform->addElement('checkbox','onlygroupworks',get_string('onlygroupworks','report_discussion_metrics'));
         $mform->setType('onlygroupworks',PARAM_INT);

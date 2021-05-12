@@ -26,6 +26,6 @@ defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'report_discussion_metrics';
 $plugin->release = '0.1.0';
-$plugin->version = 2020100104;
+$plugin->version = 2020100105;
 $plugin->requires = 2019052000;
 $plugin->maturity = MATURITY_ALPHA;
