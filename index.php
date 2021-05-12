@@ -18,11 +18,16 @@ $treset = optional_param('treset', 0, PARAM_RAW);
 $page = optional_param('page', 0, PARAM_RAW);
 $pagesize = optional_param('pagesize', 0, PARAM_RAW);
 $onlygroupworks = optional_param('onlygroupworks',0,PARAM_INT);
+
 if(strpos($tsort,'firstname')!==FALSE  || strpos($tsort,'lastname')!==FALSE){
-    $orderbyname = $tsort;
+    //$orderbyname = $tsort;
+    $tdir = optional_param('tdir', 0, PARAM_INT);
+    $ascdesc = ($tdir == 4) ?'ASC':'DESC';
+    $orderbyname = $tsort.' '.$ascdesc;
 }else{
     $orderbyname = '';
 }
+
 $params['id'] = $courseid;
 $course = $DB->get_record('course',array('id'=>$courseid));
 
