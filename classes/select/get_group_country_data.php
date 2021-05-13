@@ -37,7 +37,7 @@ class get_group_country_data {
     
     public $data = array();
     
-    public function __construct($students,$courseid,$forumid=NULL,$discussions,$discussionarray,$firstposts,$allgroups=NULL,$countryfilter=NULL,$starttime=0,$endtime=0){
+    public function __construct($students,$courseid,$forumid=NULL,$discussions,$discussionarray,$firstposts,$allgroups=NULL,$starttime=0,$endtime=0){
         global $DB;
         $countries = get_string_manager()->get_list_of_countries();
         if(!$allgroups){

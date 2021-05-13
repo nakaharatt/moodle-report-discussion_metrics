@@ -8,7 +8,7 @@ $startnow = optional_param('startnow',0, PARAM_INT);
 $forumid = optional_param('forum',0, PARAM_INT);
 $courseid = required_param('id', PARAM_INT);
 $groupid = optional_param('group', 0, PARAM_INT);
-$grouoingid = optional_param('grouping', 0, PARAM_INT);
+$groupingid = optional_param('grouping', 0, PARAM_INT);
 $type = optional_param('type', 0, PARAM_INT);
 $countryid = optional_param('country', '', PARAM_RAW);
 $start = optional_param('start', '', PARAM_RAW);
@@ -52,13 +52,12 @@ $countries = get_string_manager()->get_list_of_countries();
 
 $mform = new report_form();
 $fromform = $mform->get_data();
-$paramstr = '?course='.$course->id.'&forum='.$forumid;
+$paramstr = '?course='.$course->id.'&forum='.$forumid.'&group='.$groupid.'&grouping='.$groupingid;
 
 $groups = array();
 if($groupid){
     $params['group'] = $groupid;
-    $groupfilter = $groupid;;
-    $paramstr .= '&group='.$groupfilter;
+    $groupfilter = $groupid;
     $groups[] = groups_get_group($groupid);
     $groupname = groups_get_group_name($groupid);
     $groupmembers = groups_get_members($groupid);
@@ -70,15 +69,15 @@ if($groupid){
     echo $groupfilter
     $groupname = groups_get_all_groups($course->id)[$groupfilter]->name;
 */
-    $grouoingid = '';
+    $groupingid = '';
 }else{
     $groupfilter = 0;
     $groupname = "";
 }
-if($grouoingid){
-    $params['grouping'] = $grouoingid;
-    $groupingmembers = groups_get_grouping_members($grouoingid);
-    $groupinggroups = groups_get_all_groups($courseid,'',$grouoingid);
+if($groupingid){
+    $params['grouping'] = $groupingid;
+    $groupingmembers = groups_get_grouping_members($groupingid);
+    $groupinggroups = groups_get_all_groups($courseid,'',$groupingid);
     if(!$groupid){
         $groupid = array_keys($groupinggroups);
         $groups = $groupinggroups;
@@ -319,7 +318,7 @@ if($type||$tsort||$treset||$page){
             $table->add_data($trdata);
         }
     }elseif($type == 6){ //CountryをGroupごと
-        $groupcountrydata = new report_discussion_metrics\select\get_group_country_data($students,$courseid,$forumid,$discussions,$discussionarray,$firstposts,$groups,$countryfilter,$starttime,$endtime);
+        $groupcountrydata = new report_discussion_metrics\select\get_group_country_data($students,$courseid,$forumid,$discussions,$discussionarray,$firstposts,$groups,$starttime,$endtime);
         $data = $groupcountrydata->data;
         $table->define_columns(array('groupname','country','users','repliestoseed', 'replies','repliedusers','notrepliedusers','wordcount', 'views','multimedia'));
         $table->define_headers(array($strgroup,$strcounrty,'#member','R2NDPost','#replies','#replied user','#not replied user',$strwordcount,$strviews,$strmultimedia));
