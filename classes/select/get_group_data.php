@@ -80,7 +80,7 @@ class get_group_data {
                     $multimedianum = 0;
                     $studentdata->participants = 0;
                     $studentdata->multinationals = 0;
-                    $allpostssql = 'SELECT * FROM {forum_posts} WHERE parent>0 AND userid='.$student->id.' AND discussion IN '.$discussionarray;
+                    $allpostssql = 'SELECT * FROM {forum_posts} WHERE userid='.$student->id.' AND discussion IN '.$discussionarray;
                     if($starttime){
                         $allpostssql = $allpostssql.' AND created>'.$starttime;
                     }
